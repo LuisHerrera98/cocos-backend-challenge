@@ -1,9 +1,12 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { DataSource, EntityManager } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { AccountsService } from '../accounts/accounts.service';
 import { MAX_POSTGRES_INT } from '../common/limits';
 import { fromCents, toCents } from '../common/money';
@@ -20,6 +23,8 @@ export class OrdersService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly accountsService: AccountsService,
+    @InjectRepository(Order)
+    private readonly ordersRepository: Repository<Order>,
   ) {}
 
   async create(body: CreateOrderBody): Promise<Order> {
@@ -55,6 +60,22 @@ export class OrdersService {
         }),
       );
     });
+  }
+
+  async cancel(orderId: number): Promise<Order> {
+    // The status check is part of the UPDATE, so two cancels cannot both win.
+    const result = await this.ordersRepository.update(
+      { id: orderId, status: OrderStatus.NEW },
+      { status: OrderStatus.CANCELLED },
+    );
+    const order = await this.ordersRepository.findOneBy({ id: orderId });
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+    if (result.affected === 0) {
+      throw new ConflictException('Only NEW orders can be cancelled');
+    }
+    return order;
   }
 
   private assertValidCombination(body: CreateOrderBody): void {
