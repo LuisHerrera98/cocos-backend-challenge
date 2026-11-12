@@ -1,8 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsInt, Max, Min } from 'class-validator';
-
-// users.id is a Postgres INT; a bigger value makes the query fail.
-const MAX_POSTGRES_INT = 2147483647;
+import { MAX_POSTGRES_INT } from '../../common/limits';
 
 export class GetPortfolioParams {
   @Type(() => Number)

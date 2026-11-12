@@ -1,11 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
+import { AccountsService } from '../accounts/accounts.service';
+import { fromCents, toCents } from '../common/money';
 import { PortfolioResponse, PositionResponse } from './dto/portfolio.response';
-
-interface CashRow {
-  balance: string;
-  reserved: string;
-}
 
 interface PositionRow {
   instrument_id: number;
@@ -17,28 +14,6 @@ interface PositionRow {
   total_return_percent: string | null;
   daily_return_percent: string | null;
 }
-
-// For cash transfers the amount is in size.
-const CASH_QUERY = `
-  SELECT
-    COALESCE(
-      SUM(
-        CASE side
-          WHEN 'CASH_IN' THEN size
-          WHEN 'CASH_OUT' THEN -size
-          WHEN 'SELL' THEN size * price
-          WHEN 'BUY' THEN -size * price
-        END
-      ) FILTER (WHERE status = 'FILLED'),
-      0
-    ) AS balance,
-    COALESCE(
-      SUM(size * price) FILTER (WHERE status = 'NEW' AND side = 'BUY'),
-      0
-    ) AS reserved
-  FROM orders
-  WHERE userid = $1
-`;
 
 // Only positive holdings: the seed data oversells BMA.
 const POSITIONS_QUERY = `
@@ -81,15 +56,15 @@ const POSITIONS_QUERY = `
   ORDER BY i.ticker, i.id
 `;
 
-// Money is added in cents to avoid float rounding errors.
-const toCents = (amount: string): number => Math.round(Number(amount) * 100);
-const fromCents = (cents: number): number => cents / 100;
 const toNumber = (value: string | null): number | null =>
   value === null ? null : Number(value);
 
 @Injectable()
 export class PortfolioService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly accountsService: AccountsService,
+  ) {}
 
   async getPortfolio(userId: number): Promise<PortfolioResponse> {
     // Both reads must see the same snapshot.
@@ -98,13 +73,12 @@ export class PortfolioService {
       async (manager) => {
         await this.assertUserExists(manager, userId);
         return {
-          cash: await this.findCash(manager, userId),
+          cash: await this.accountsService.findCash(manager, userId),
           positions: await this.findPositions(manager, userId),
         };
       },
     );
 
-    const balanceCents = toCents(cash.balance);
     const positionsCents = positions.reduce(
       (total, position) => total + toCents(position.market_value ?? '0'),
       0,
@@ -113,8 +87,8 @@ export class PortfolioService {
     return {
       userId,
       // Reserved cash still counts towards the total.
-      totalValue: fromCents(balanceCents + positionsCents),
-      availableCash: fromCents(balanceCents - toCents(cash.reserved)),
+      totalValue: fromCents(cash.totalCents + positionsCents),
+      availableCash: fromCents(cash.availableCents),
       positions: positions.map((position) => this.toPositionResponse(position)),
     };
   }
@@ -130,14 +104,6 @@ export class PortfolioService {
     if (users.length === 0) {
       throw new NotFoundException(`User ${userId} not found`);
     }
-  }
-
-  private async findCash(
-    manager: EntityManager,
-    userId: number,
-  ): Promise<CashRow> {
-    const [cash] = await manager.query<CashRow[]>(CASH_QUERY, [userId]);
-    return cash;
   }
 
   private findPositions(
