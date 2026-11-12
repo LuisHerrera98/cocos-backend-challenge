@@ -7,7 +7,7 @@ Tiene tres partes: búsqueda de activos, portfolio de un usuario y envío y canc
 ## Requisitos
 
 - Node 24.9 o superior (hay un `.nvmrc`)
-- Docker, para levantar Postgres
+- Docker, para levantar el Postgres local. Es opcional: más abajo está cómo correrlo sin Docker.
 
 ## Cómo levantarlo
 
@@ -26,7 +26,23 @@ La API queda en `http://localhost:3000`.
 docker compose down -v && docker compose up -d
 ```
 
-La base se elige con `DATABASE_URL` en el `.env`. Por defecto apunta a la local. En `.env.example` está comentado el formato para apuntar a otra base.
+### Sin Docker
+
+Docker se usa solo para la base. La app es Node y se conecta al Postgres que diga `DATABASE_URL` en el `.env`, así que alcanza con cambiar esa línea:
+
+```bash
+npm install
+cp .env.example .env
+# editar DATABASE_URL en .env
+npm run start:dev
+```
+
+Sirve cualquier Postgres que tenga las tablas del challenge:
+
+- La base provista para el challenge. En `.env.example` está comentado el formato de la URL.
+- Un Postgres instalado en la máquina. Las tablas y los datos se cargan con `psql "$DATABASE_URL" -f db/init/01-database.sql`.
+
+Si la base es compartida, hay que tener en cuenta que `POST /orders` y la cancelación escriben en ella.
 
 ## Tests
 
@@ -35,7 +51,7 @@ npm test
 npm run test:e2e
 ```
 
-`npm run test:e2e` es el test funcional de las órdenes. Levanta la app y le pega por HTTP contra el Postgres local, así que necesita `docker compose up -d` antes.
+`npm run test:e2e` es el test funcional de las órdenes. Levanta la app y le pega por HTTP contra el Postgres local, así que necesita esa base levantada.
 
 - Usa el usuario 4, que no tiene órdenes en los datos originales. Antes de cada test le borra las órdenes y le carga 10.000 pesos, y al terminar lo deja vacío. No toca a los otros usuarios.
 - Si `DATABASE_URL` no apunta a `localhost`, falla sin escribir nada. Es para no correrlo por error contra una base compartida.
@@ -246,6 +262,7 @@ Concurrencia:
 - Guardar el motivo del rechazo. Hoy una orden `REJECTED` no dice si fue por plata o por acciones.
 - Aceptar `CASH_IN` y `CASH_OUT` en la API. Serviría para cargarle plata a un usuario y probar con cuentas que hoy están en cero.
 - Paginación en la búsqueda y búsqueda sin acentos.
+- Documentación con Swagger (OpenAPI). Hoy los ejemplos de uso están en la colección de Postman.
 
 ## Sobre los datos
 
