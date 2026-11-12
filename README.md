@@ -7,42 +7,57 @@ Tiene tres partes: búsqueda de activos, portfolio de un usuario y envío y canc
 ## Requisitos
 
 - Node 24.9 o superior (hay un `.nvmrc`)
-- Docker, para levantar el Postgres local. Es opcional: más abajo está cómo correrlo sin Docker.
+- Docker, solo si se quiere usar el Postgres local que trae el proyecto.
 
 ## Cómo levantarlo
 
+Necesita un Postgres con las tablas del challenge. La URL va en `DATABASE_URL`, en el `.env`.
+
 ```bash
+git clone https://github.com/LuisHerrera98/cocos-backend-challenge.git
+cd cocos-backend-challenge
+npm install
+cp .env.example .env
+# poner en DATABASE_URL la URL del Postgres
+npm run start:dev
+```
+
+### Con Docker
+
+Es otra forma de levantarlo, para no depender de una base externa. El proyecto trae un Postgres con los datos del challenge y el `.env.example` ya apunta a él, así que no hay que editar nada:
+
+```bash
+git clone https://github.com/LuisHerrera98/cocos-backend-challenge.git
+cd cocos-backend-challenge
 npm install
 cp .env.example .env
 docker compose up -d
 npm run start:dev
 ```
 
-La API queda en `http://localhost:3000`.
+### Comprobar que anda
 
-`docker compose up -d` levanta un Postgres 18 en el puerto 5433 y carga el `database.sql` del challenge, que está en `db/init/`. Ese script corre solo la primera vez. Para volver a los datos originales:
-
-```bash
-docker compose down -v && docker compose up -d
-```
-
-### Sin Docker
-
-Docker se usa solo para la base. La app es Node y se conecta al Postgres que diga `DATABASE_URL` en el `.env`, así que alcanza con cambiar esa línea:
+De las dos formas la API queda en `http://localhost:3000`. Desde otra terminal:
 
 ```bash
-npm install
-cp .env.example .env
-# editar DATABASE_URL en .env
-npm run start:dev
+curl "http://localhost:3000/instruments?q=ggal"
+curl http://localhost:3000/users/1/portfolio
 ```
 
-Sirve cualquier Postgres que tenga las tablas del challenge:
+### Sobre la base
+
+Sin Docker sirve cualquier Postgres que tenga las tablas del challenge:
 
 - La base provista para el challenge. En `.env.example` está comentado el formato de la URL.
 - Un Postgres instalado en la máquina. Las tablas y los datos se cargan con `psql "$DATABASE_URL" -f db/init/01-database.sql`.
 
 Si la base es compartida, hay que tener en cuenta que `POST /orders` y la cancelación escriben en ella.
+
+Con Docker, `docker compose up -d` levanta un Postgres 18 en el puerto 5433 y carga el `database.sql` del challenge, que está en `db/init/`. Ese script corre solo la primera vez. Para volver a los datos originales:
+
+```bash
+docker compose down -v && docker compose up -d
+```
 
 ## Tests
 
@@ -276,7 +291,7 @@ Cosas que encontré en el `database.sql` y cómo las traté. No modifiqué los d
 
 ## Postman
 
-En `docs/cocos-challenge.postman_collection.json` hay una colección con ejemplos de cada endpoint, incluidos los casos de error.
+En `docs/cocos-challenge.postman_collection.json` hay una colección con ejemplos de cada endpoint, incluidos los casos de error. Se carga en Postman con el botón Import.
 
 Usa tres variables: `baseUrl`, `userId` y `orderId`. `orderId` vale 5, que en los datos originales es una orden `NEW` y se puede cancelar.
 
