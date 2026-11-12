@@ -1,0 +1,143 @@
+{
+  "info": {
+    "name": "Cocos Backend Challenge",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "userId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Instruments",
+      "item": [
+        {
+          "name": "Search by ticker",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/instruments?q=GGAL",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "instruments"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "GGAL"
+                }
+              ]
+            },
+            "description": "Exact ticker match is returned first."
+          },
+          "response": []
+        },
+        {
+          "name": "Search by name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/instruments?q=banco",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "instruments"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "banco"
+                }
+              ]
+            },
+            "description": "Case-insensitive match on the instrument name."
+          },
+          "response": []
+        },
+        {
+          "name": "Search by partial text",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/instruments?q=ma",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "instruments"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "ma"
+                }
+              ]
+            },
+            "description": "Matches ticker or name containing the text."
+          },
+          "response": []
+        },
+        {
+          "name": "Search with no results",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/instruments?q=zzz",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "instruments"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "zzz"
+                }
+              ]
+            },
+            "description": "Returns an empty array."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid: empty query",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/instruments?q=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "instruments"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Returns 400 Bad Request."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
