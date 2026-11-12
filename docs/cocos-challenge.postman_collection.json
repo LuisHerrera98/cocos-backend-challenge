@@ -136,6 +136,115 @@
             "description": "Returns 400 Bad Request."
           },
           "response": []
+        },
+        {
+          "name": "Invalid: control character",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/instruments?q=%00",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "instruments"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "%00"
+                }
+              ]
+            },
+            "description": "Returns 400 Bad Request."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Portfolio",
+      "item": [
+        {
+          "name": "Get portfolio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/portfolio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}",
+                "portfolio"
+              ]
+            },
+            "description": "Total account value, available cash and positions."
+          },
+          "response": []
+        },
+        {
+          "name": "User without orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/2/portfolio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "2",
+                "portfolio"
+              ]
+            },
+            "description": "Returns zero balances and no positions."
+          },
+          "response": []
+        },
+        {
+          "name": "User not found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/999/portfolio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "999",
+                "portfolio"
+              ]
+            },
+            "description": "Returns 404 Not Found."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid: non numeric id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/abc/portfolio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "abc",
+                "portfolio"
+              ]
+            },
+            "description": "Returns 400 Bad Request."
+          },
+          "response": []
         }
       ]
     }
