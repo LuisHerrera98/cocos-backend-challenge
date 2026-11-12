@@ -200,7 +200,7 @@ No lleva body. Pasa la orden a `CANCELLED` y la devuelve. Solo se pueden cancela
 - TypeORM está con `synchronize: false`. El esquema lo define el `database.sql` del challenge y no quiero que el ORM lo modifique por su cuenta.
 - La base local se crea con el mismo `database.sql`, sin cambios. No modifiqué el esquema.
 - No hay autenticación, como dice el enunciado. Cualquiera puede operar por cualquier usuario y cancelar cualquier orden.
-- Los datos de entrada se validan con un `ValidationPipe` global. Los parámetros que no existen se rechazan con 400 en vez de ignorarse.
+- Los datos de entrada se validan con un `ValidationPipe` global. En la búsqueda y en el body de las órdenes, un campo que no existe se rechaza con 400 en vez de ignorarse.
 
 ### Búsqueda de activos
 
